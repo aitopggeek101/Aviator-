@@ -12,7 +12,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "@/components/ui/use-toast"
-import { registerUser } from "@/lib/auth-actions"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
 
@@ -72,43 +71,6 @@ export default function RegisterPage() {
         description: error.message || "Something went wrong. Please try again.",
         variant: "destructive",
       })
-    }
-  }
-
-  async function handleDirectRegister() {
-    setIsSubmitting(true)
-    setError("")
-
-    try {
-      const values = form.getValues()
-
-      // Register without child data
-      const result = await registerUser({
-        parent: {
-          name: values.name,
-          email: values.email,
-          password: values.password,
-        },
-      })
-
-      if (result.success) {
-        toast({
-          title: "Registration successful",
-          description: "Your account has been created.",
-        })
-        router.push("/dashboard")
-      } else {
-        throw new Error(result.message || "Registration failed")
-      }
-    } catch (error) {
-      setError(error.message || "Something went wrong. Please try again.")
-      toast({
-        title: "Error",
-        description: error.message || "Something went wrong. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsSubmitting(false)
     }
   }
 
@@ -258,28 +220,34 @@ function ChildRegistrationForm({ parentData, setError }) {
     setError("")
 
     try {
-      // Combine parent and child data
+      // Simulate successful registration
+      console.log("Registration data:", { parent: parentData, child: values })
+
+      // Store in localStorage for demo purposes
       const userData = {
-        parent: parentData,
-        child: values,
+        id: Date.now().toString(),
+        parent: {
+          name: parentData.name,
+          email: parentData.email,
+          // Don't store actual password in localStorage
+        },
+        child: {
+          name: values.childName,
+          age: values.childAge,
+          grade: values.childGrade,
+          school: values.childSchool,
+        },
       }
 
-      console.log("Submitting registration data:", userData)
+      localStorage.setItem("currentUser", JSON.stringify(userData))
 
-      // Register the user with child data
-      const result = await registerUser(userData)
-      console.log("Registration result:", result)
+      toast({
+        title: "Registration successful",
+        description: "Your account has been created.",
+      })
 
-      if (result.success) {
-        toast({
-          title: "Registration successful",
-          description: "Your account has been created.",
-        })
-
-        router.push("/dashboard")
-      } else {
-        throw new Error(result.message || "Registration failed. Please try again.")
-      }
+      // Redirect to dashboard
+      router.push("/dashboard")
     } catch (error) {
       console.error("Registration error:", error)
       setError(error.message || "Something went wrong. Please try again.")

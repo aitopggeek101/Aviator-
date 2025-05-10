@@ -29,8 +29,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { deleteChildProfile } from "@/lib/auth-actions"
-import { updateProfile, addChildProfile, addDriverProfile } from "@/lib/profile-actions"
 
 export default function ProfileManagement({ user }) {
   const router = useRouter()
@@ -60,7 +58,12 @@ export default function ProfileManagement({ user }) {
   const handleParentUpdate = async () => {
     setIsUpdating(true)
     try {
-      await updateProfile("parent", parentProfile)
+      // Update the user in localStorage
+      const storedUser = JSON.parse(localStorage.getItem("currentUser") || "{}")
+      storedUser.parent.name = parentProfile.name
+      storedUser.parent.email = parentProfile.email
+      localStorage.setItem("currentUser", JSON.stringify(storedUser))
+
       toast({
         title: "Profile updated",
         description: "Your profile has been updated successfully.",
@@ -79,8 +82,23 @@ export default function ProfileManagement({ user }) {
   const handleChildUpdate = async (childId, updatedData) => {
     setIsUpdating(true)
     try {
-      await updateProfile("child", { id: childId, ...updatedData })
+      // Update the child in localStorage
+      const storedUser = JSON.parse(localStorage.getItem("currentUser") || "{}")
+
+      if (storedUser.child) {
+        Object.assign(storedUser.child, {
+          name: updatedData.name || storedUser.child.name,
+          age: updatedData.age || storedUser.child.age,
+          grade: updatedData.grade || storedUser.child.grade,
+          school: updatedData.school || storedUser.child.school,
+        })
+
+        localStorage.setItem("currentUser", JSON.stringify(storedUser))
+      }
+
+      // Update the UI
       setChildProfiles(childProfiles.map((child) => (child.id === childId ? { ...child, ...updatedData } : child)))
+
       toast({
         title: "Child profile updated",
         description: "Child profile has been updated successfully.",
@@ -96,50 +114,17 @@ export default function ProfileManagement({ user }) {
     }
   }
 
-  const handleDriverUpdate = async (driverId, updatedData) => {
-    setIsUpdating(true)
-    try {
-      await updateProfile("driver", { id: driverId, ...updatedData })
-      setDriverProfiles(
-        driverProfiles.map((driver) => (driver.id === driverId ? { ...driver, ...updatedData } : driver)),
-      )
-      toast({
-        title: "Driver profile updated",
-        description: "Driver profile has been updated successfully.",
-      })
-    } catch (error) {
-      toast({
-        title: "Update failed",
-        description: "Failed to update driver profile. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsUpdating(false)
-    }
-  }
-
   const handleDeleteChild = async (childId) => {
     try {
-      const result = await deleteChildProfile(childId)
+      // For demo purposes, deleting a child means deleting the account
+      localStorage.removeItem("currentUser")
 
-      if (result.success) {
-        if (result.accountDeleted) {
-          toast({
-            title: "Account deleted",
-            description: "Your account has been deleted because you have no children registered.",
-          })
-          router.push("/register")
-          return
-        }
+      toast({
+        title: "Account deleted",
+        description: "Your account has been deleted because you have no children registered.",
+      })
 
-        setChildProfiles(childProfiles.filter((child) => child.id !== childId))
-        toast({
-          title: "Child profile deleted",
-          description: "Child profile has been deleted successfully.",
-        })
-      } else {
-        throw new Error(result.message || "Failed to delete child profile")
-      }
+      router.push("/register")
     } catch (error) {
       toast({
         title: "Deletion failed",
@@ -149,26 +134,16 @@ export default function ProfileManagement({ user }) {
     }
   }
 
-  const handleDeleteDriver = async (driverId) => {
-    try {
-      await updateProfile("driver", { id: driverId, deleted: true })
-      setDriverProfiles(driverProfiles.filter((driver) => driver.id !== driverId))
-      toast({
-        title: "Driver profile deleted",
-        description: "Driver profile has been deleted successfully.",
-      })
-    } catch (error) {
-      toast({
-        title: "Deletion failed",
-        description: "Failed to delete driver profile. Please try again.",
-        variant: "destructive",
-      })
-    }
-  }
-
   const handleAddChild = async () => {
     try {
-      const newChild = await addChildProfile(newChildData)
+      const newChild = {
+        id: `child_${Date.now()}`,
+        name: newChildData.name,
+        age: Number.parseInt(newChildData.age),
+        grade: newChildData.grade,
+        school: newChildData.school,
+      }
+
       setChildProfiles([...childProfiles, newChild])
       setNewChildData({ name: "", age: "", grade: "", school: "" })
       setShowAddChildDialog(false)
@@ -198,7 +173,14 @@ export default function ProfileManagement({ user }) {
         return
       }
 
-      const newDriver = await addDriverProfile(newDriverData)
+      const newDriver = {
+        id: `driver_${Date.now()}`,
+        name: newDriverData.name,
+        licenseNumber: newDriverData.licenseNumber,
+        phoneNumber: newDriverData.phoneNumber,
+        vinNumber: newDriverData.vinNumber,
+      }
+
       setDriverProfiles([...driverProfiles, newDriver])
       setNewDriverData({ name: "", licenseNumber: "", phoneNumber: "", vinNumber: "" })
       setShowAddDriverDialog(false)
@@ -214,6 +196,24 @@ export default function ProfileManagement({ user }) {
         variant: "destructive",
       })
     }
+  }
+
+  const handleDriverUpdate = (driverId, updatedData) => {
+    setDriverProfiles(driverProfiles.map((driver) => (driver.id === driverId ? { ...driver, ...updatedData } : driver)))
+
+    toast({
+      title: "Driver updated",
+      description: "Driver profile has been updated successfully.",
+    })
+  }
+
+  const handleDeleteDriver = (driverId) => {
+    setDriverProfiles(driverProfiles.filter((driver) => driver.id !== driverId))
+
+    toast({
+      title: "Driver deleted",
+      description: "Driver profile has been deleted successfully.",
+    })
   }
 
   return (

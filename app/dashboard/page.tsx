@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { getUserProfile, logoutUser } from "@/lib/auth-actions"
 import ProfileManagement from "@/components/profile-management"
 import LiveTracking from "@/components/live-tracking"
 
@@ -15,37 +14,47 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    async function loadUserProfile() {
-      try {
-        const profile = await getUserProfile()
-        console.log("Loaded user profile:", profile)
+    // Check if user is logged in
+    const storedUser = localStorage.getItem("currentUser")
 
-        if (!profile) {
-          // Redirect to login if no profile is found
-          console.log("No profile found, redirecting to login")
-          router.push("/login")
-          return
-        }
-
-        setUser(profile)
-      } catch (error) {
-        console.error("Failed to load profile:", error)
-        router.push("/login")
-      } finally {
-        setLoading(false)
-      }
+    if (!storedUser) {
+      router.push("/login")
+      return
     }
 
-    loadUserProfile()
+    try {
+      const userData = JSON.parse(storedUser)
+
+      // Format the user data to match the expected structure
+      setUser({
+        id: userData.id,
+        parent: {
+          id: userData.id,
+          name: userData.parent.name,
+          email: userData.parent.email,
+        },
+        children: [
+          {
+            id: `child_${userData.id}`,
+            name: userData.child.name,
+            age: userData.child.age,
+            grade: userData.child.grade,
+            school: userData.child.school,
+          },
+        ],
+        drivers: [],
+      })
+    } catch (error) {
+      console.error("Failed to parse user data:", error)
+      router.push("/login")
+    } finally {
+      setLoading(false)
+    }
   }, [router])
 
-  const handleLogout = async () => {
-    try {
-      await logoutUser()
-      router.push("/login")
-    } catch (error) {
-      console.error("Logout error:", error)
-    }
+  const handleLogout = () => {
+    localStorage.removeItem("currentUser")
+    router.push("/login")
   }
 
   if (loading) {

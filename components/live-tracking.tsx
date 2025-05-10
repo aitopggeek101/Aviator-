@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { toast } from "@/components/ui/use-toast"
 import { MapPin } from "lucide-react"
-import { getVehicleLocation } from "@/lib/profile-actions"
 
 export default function LiveTracking({ user }) {
   const mapRef = useRef(null)
@@ -15,26 +14,7 @@ export default function LiveTracking({ user }) {
   const [tracking, setTracking] = useState(false)
   const [location, setLocation] = useState({ lat: 40.7128, lng: -74.006 }) // Default to NYC
   const [busLocation, setBusLocation] = useState(null)
-  const [vehicleId, setVehicleId] = useState("demo-vehicle-id") // Default for demo
   const [isLoading, setIsLoading] = useState(false)
-
-  // Get the vehicle ID associated with the child's school route
-  useEffect(() => {
-    if (selectedChild && user.children) {
-      const child = user.children.find((c) => c.id === selectedChild)
-      if (child) {
-        // In a real app, you would fetch the vehicle assigned to this child's route
-        // For now, we'll use the first driver's vehicle if available
-        if (user.drivers && user.drivers.length > 0) {
-          // This would be a database query in a real app
-          setVehicleId(user.drivers[0].id)
-        } else {
-          // Use demo vehicle ID if no drivers are available
-          setVehicleId("demo-vehicle-id")
-        }
-      }
-    }
-  }, [selectedChild, user])
 
   useEffect(() => {
     // Initialize the map
@@ -55,33 +35,20 @@ export default function LiveTracking({ user }) {
   useEffect(() => {
     let interval
 
-    if (tracking && vehicleId) {
+    if (tracking) {
       // Poll for vehicle location updates
       setIsLoading(true)
 
       const fetchLocation = async () => {
         try {
-          const locationData = await getVehicleLocation(vehicleId)
-          if (locationData) {
-            setBusLocation({
-              lat: locationData.latitude,
-              lng: locationData.longitude,
-            })
-          } else {
-            // For demo purposes, generate random movement
-            setBusLocation({
-              lat: location.lat + (Math.random() * 0.01 - 0.005),
-              lng: location.lng + (Math.random() * 0.01 - 0.005),
-            })
-          }
-          setIsLoading(false)
-        } catch (error) {
-          console.error("Error fetching location:", error)
           // For demo purposes, generate random movement
           setBusLocation({
             lat: location.lat + (Math.random() * 0.01 - 0.005),
             lng: location.lng + (Math.random() * 0.01 - 0.005),
           })
+          setIsLoading(false)
+        } catch (error) {
+          console.error("Error fetching location:", error)
           setIsLoading(false)
         }
       }
@@ -103,7 +70,7 @@ export default function LiveTracking({ user }) {
     return () => {
       if (interval) clearInterval(interval)
     }
-  }, [tracking, vehicleId, location])
+  }, [tracking, location])
 
   const drawMap = (ctx) => {
     if (!ctx) return

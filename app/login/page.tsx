@@ -11,7 +11,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { toast } from "@/components/ui/use-toast"
-import { loginUser } from "@/lib/auth-actions"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
 
@@ -42,34 +41,41 @@ export default function LoginPage() {
     setError("")
 
     try {
-      console.log("Attempting login with:", values.email)
-      const result = await loginUser(values)
-      console.log("Login result:", result)
+      // For demo purposes, check if there's a user in localStorage
+      const storedUser = localStorage.getItem("currentUser")
 
-      if (result.success) {
+      if (!storedUser) {
+        setError("Account not found. You need to register before signing in.")
         toast({
-          title: "Login successful",
-          description: "Welcome back!",
+          title: "Account not found",
+          description: "You need to register before signing in.",
+          variant: "destructive",
         })
-        router.push("/dashboard")
-      } else {
-        // Check if user is trying to sign in without registering
-        if (result.error === "user_not_found") {
-          setError("Account not found. You need to register before signing in.")
-          toast({
-            title: "Account not found",
-            description: "You need to register before signing in.",
-            variant: "destructive",
-          })
-        } else {
-          setError(result.message || "Invalid email or password.")
-          toast({
-            title: "Login failed",
-            description: result.message || "Invalid email or password.",
-            variant: "destructive",
-          })
-        }
+        setIsSubmitting(false)
+        return
       }
+
+      const user = JSON.parse(storedUser)
+
+      // In a real app, we would verify the password here
+      // For demo purposes, just check if the email matches
+      if (user.parent.email !== values.email) {
+        setError("Invalid email or password.")
+        toast({
+          title: "Login failed",
+          description: "Invalid email or password.",
+          variant: "destructive",
+        })
+        setIsSubmitting(false)
+        return
+      }
+
+      toast({
+        title: "Login successful",
+        description: "Welcome back!",
+      })
+
+      router.push("/dashboard")
     } catch (error) {
       console.error("Login error:", error)
       setError(error.message || "Something went wrong. Please try again.")
