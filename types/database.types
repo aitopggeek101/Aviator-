@@ -1,0 +1,141 @@
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+
+export interface Database {
+  public: {
+    Tables: {
+      users: {
+        Row: {
+          id: string;
+          name: string;
+          email: string;
+          password_hash: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          email: string;
+          password_hash: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          email?: string;
+          password_hash?: string;
+          created_at?: string;
+        };
+      };
+      children: {
+        Row: {
+          id: string;
+          user_id: string;
+          name: string;
+          age: number;
+          grade: string;
+          school: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          name: string;
+          age: number;
+          grade: string;
+          school: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          name?: string;
+          age?: number;
+          grade?: string;
+          school?: string;
+          created_at?: string;
+        };
+      };
+      drivers: {
+        Row: {
+          id: string;
+          user_id: string;
+          name: string;
+          license_number: string;
+          phone_number: string;
+          vin_number: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          name: string;
+          license_number: string;
+          phone_number: string;
+          vin_number: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          name?: string;
+          license_number?: string;
+          phone_number?: string;
+          vin_number?: string;
+          created_at?: string;
+        };
+      };
+      vehicles: {
+        Row: {
+          id: string;
+          driver_id: string;
+          vin_number: string;
+          make: string;
+          model: string;
+          year: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          driver_id: string;
+          vin_number: string;
+          make: string;
+          model: string;
+          year: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          driver_id?: string;
+          vin_number?: string;
+          make?: string;
+          model?: string;
+          year?: number;
+          created_at?: string;
+        };
+      };
+      locations: {
+        Row: {
+          id: string;
+          vehicle_id: string;
+          latitude: number;
+          longitude: number;
+          timestamp: string;
+        };
+        Insert: {
+          id?: string;
+          vehicle_id: string;
+          latitude: number;
+          longitude: number;
+          timestamp?: string;
+        };
+        Update: {
+          id?: string;
+          vehicle_id?: string;
+          latitude?: number;
+          longitude?: number;
+          timestamp?: string;
+        };
+      };
+    };
+  };
+}
